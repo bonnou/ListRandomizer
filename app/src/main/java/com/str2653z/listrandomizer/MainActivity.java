@@ -110,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         return super.onOptionsItemSelected(item);
     }
 
-    @Override // LoaderManagerのメソッド実装、初回のクエリ実行を
+    @Override // LoaderManagerのメソッド実装、初回のクエリ実行内容を指定
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // SELECT句
         String[] projection = {
