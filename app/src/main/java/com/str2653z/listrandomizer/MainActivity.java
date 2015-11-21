@@ -99,7 +99,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         return true;
     }
 
-    @Override // Menuのメソッド実装、action内容を判断し適切な処理を実行
+    @Override // Menuのメソッド実装、メニューのオプション項目の選択イベントを判断し適切な処理を実行
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.action_add) {
