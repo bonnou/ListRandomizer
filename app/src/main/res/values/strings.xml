@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">ListRandomizer</string>
+
+    <string name="action_add">ADD</string>
+    <string name="action_save">SAVE</string>
+    <string name="action_delete">DELETE</string>
+    <string name="hint_title">Title</string>
+    <string name="hint_body">Body</string>
+    <string name="title_activity_sub">SubActivity</string>
+</resources>
