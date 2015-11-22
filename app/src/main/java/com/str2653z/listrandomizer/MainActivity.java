@@ -6,24 +6,61 @@ import android.content.Intent;
 import android.content.Loader;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
+import android.widget.Toast;
+import android.widget.TwoLineListItem;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor> {
+
+    public static final String CLASS_NAME = "MainActivity";
 
     private SimpleCursorAdapter adapter;
     public static final String EXTRA_MYID = "com.str2653z.listrandomizer.MYID";
 
+    // FloatingActionButtonのonClickイベントで参照したかったのでフィールドを作成
+    // staticである必要はないのかも・・・
+    public static ListView mainListView;
+
+    // ListViewのインデックスリスト
+    List<Integer> indexList = new ArrayList<Integer>();
+
+    private void initIndexSet() {
+        // ListViewの件数をカウントし全インデックス値を詰める
+        int mainListViewCnt = mainListView.getCount();
+        for (int i = 0; i < mainListViewCnt; i++) {
+            indexList.add(new Integer(i));
+        }
+    }
+
+    private Integer getIndexRandom() {
+        // インデックスリストからランダムに要素を取得
+        Random random = new Random();
+        int randomIndex = random.nextInt(indexList.size());
+        Integer i = indexList.get(randomIndex);
+        indexList.remove(randomIndex);
+        return i;
+    }
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        final String METHOD_NAME = "onCreate";
+
         // プロジェクト作成時からあるお約束
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
@@ -37,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 android.R.id.text1,
                 android.R.id.text2
         };
+        //
         adapter = new SimpleCursorAdapter(
                 this,                                   // 本Activityオブジェクト
                 android.R.layout.simple_list_item_2,    // 行レイアウトのリソース、androidのものを使用。shift二回押して検索すると構造が確認可
@@ -47,7 +85,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         );
 
         // layoutのxmlにて定義したListViewを取得しAdapterを設定
-        ListView mainListView = (ListView) findViewById(R.id.mainListView);
+        mainListView = (ListView) findViewById(R.id.mainListView);
         mainListView.setAdapter(adapter);
         //
         mainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -63,10 +101,6 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 Intent intent = new Intent(MainActivity.this, SubActivity.class);
                 intent.putExtra(EXTRA_MYID, id);
                 startActivity(intent);
-
-
-
-
             }
         });
 
@@ -80,16 +114,115 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-/*
+
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
+/*
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+*/
+
+                if ( mainListView.getCount() == 0 ) {
+                    // ListViewが0件の場合は警告
+                    Toast.makeText(
+                            MainActivity.this,
+                            "Please add item",
+                            Toast.LENGTH_LONG
+                    ).show();
+                } else {
+
+
+                    // インデックスセットがnullまたはサイズ0の場合は初期化
+                    if (indexList.size() == 0) {
+                        initIndexSet();
+                    }
+
+                    // インデックスセットからランダムに1つ取り出しスクロール
+                    // スクロール前に、スクロール前後の一番上のインデックスを取得しておく
+                    final int randomIndex = getIndexRandom();
+                    final int beforeFirstVisiblePosition = mainListView.getFirstVisiblePosition();
+
+
+
+                    //リストアイテムの総数-1（0番目から始まって最後のアイテム）にスクロールさせる
+                    mainListView.smoothScrollToPosition(randomIndex);
+//                    mainListView.setSelection(randomIndex);
+
+                    // スムーススクロール後に一番上に表示しているViewを取るために待機 イケてない・・・？
+                    //  http://qiita.com/Kaiketch/items/51156f2a38ba181440dc
+                    mainListView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+
+                            int afterFirstVisiblePosition = mainListView.getFirstVisiblePosition();
+
+                            Log.d(CLASS_NAME + "." + METHOD_NAME, "■スクロール前の一番上の表示Viewのインデックス：" + beforeFirstVisiblePosition);
+                            Log.d(CLASS_NAME + "." + METHOD_NAME, "■スクロール後の一番上の表示Viewのインデックス：" + afterFirstVisiblePosition);
+
+                            // ランダム選択されたViewの背景色を変更
+                            View randomSelectedView = mainListView.getChildAt(randomIndex - afterFirstVisiblePosition);
+                            Log.d(CLASS_NAME + "." + METHOD_NAME, "■ランダム選択Viewのインデックス：" + randomIndex);
+
+                            if (randomSelectedView != null) {
+                                Log.d(CLASS_NAME + "." + METHOD_NAME, "■ランダム選択Viewタイトル：" + ((TwoLineListItem)randomSelectedView).getText1().getText());
+                                randomSelectedView.setBackgroundColor(ContextCompat.getColor(MainActivity.this, android.R.color.holo_red_light));
+                            }
+                            // ランダム選択以外の背景色をデフォルトに戻す（画面表示中のもののみ）
+                            for (int i = 0;
+                                 i <= mainListView.getFirstVisiblePosition() + mainListView.getChildCount();
+                                 i++)
+                            {
+
+                                View v = mainListView.getChildAt(i);
+                                if (v != null && v != randomSelectedView) {
+
+                                    // デフォルト色を取得
+                                    TypedValue typedValue = new TypedValue();
+                                    getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true);
+                                    int resourceId = typedValue.resourceId;
+                                    int colorBackground = ContextCompat.getColor(MainActivity.this, resourceId);
+
+                                    Log.d(CLASS_NAME + "." + METHOD_NAME, "■色初期化Viewタイトル：" + ((TwoLineListItem)v).getText1().getText());
+                                    v.setBackgroundColor(colorBackground);
+                                }
+                            }
+
+                        }
+                    }, 300);
+
+
+
+
+/*
+                    mainListView.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            ; // 選択する行
+                            // listView.setItemChecked(pos, true)  //singleChoiceの時はこれも呼ぶ
+                            mainListView.smoothScrollToPosition(randomIndex);
+                            adapter.notifyDataSetChanged();
+
+                            // ランダム選択されたViewの背景色を変更
+                            View randomSelectedView = mainListView.getChildAt(randomIndex);
+                            if (randomSelectedView != null) {
+                                randomSelectedView.setBackgroundColor(ContextCompat.getColor(MainActivity.this, android.R.color.holo_red_light));
+                            }
+                        }
+                    });
+*/
+
+
+
+
+
+                }
+
             }
         });
-*/
+
     }
 
     @Override // Menuのメソッド実装、res/menuフォルダ内のどのxmlを使用するかを指定

@@ -89,8 +89,7 @@ public class SubActivity extends AppCompatActivity {
                     c.getString(c.getColumnIndex(ItemContract.Items.COL_BODY))
             );
             updatedText.setText(
-                    "Updated: " +
-                            c.getString(c.getColumnIndex(ItemContract.Items.COL_UPDATED))
+                    "Updated: " + c.getString(c.getColumnIndex(ItemContract.Items.COL_UPDATED))
             );
             c.close();
         }
