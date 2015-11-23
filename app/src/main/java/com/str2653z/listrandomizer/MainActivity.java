@@ -22,6 +22,8 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
 
+import com.str2653z.listrandomizer.custom.adapter.CustomSimpleCursorAdapter;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -30,12 +32,16 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     public static final String CLASS_NAME = "MainActivity";
 
-    private SimpleCursorAdapter adapter;
+    private CustomSimpleCursorAdapter adapter;
     public static final String EXTRA_MYID = "com.str2653z.listrandomizer.MYID";
 
     // FloatingActionButtonのonClickイベントで参照したかったのでフィールドを作成
     // staticである必要はないのかも・・・
     public static ListView mainListView;
+
+    public int defaultBackgroundColor;
+
+    public Integer selectedRandomIndex;
 
     // ListViewのインデックスリスト
     List<Integer> indexList = new ArrayList<Integer>();
@@ -75,9 +81,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 android.R.id.text2
         };
         //
-        adapter = new SimpleCursorAdapter(
+        adapter = new CustomSimpleCursorAdapter(
                 this,                                   // 本Activityオブジェクト
-                android.R.layout.simple_list_item_2,    // 行レイアウトのリソース、androidのものを使用。shift二回押して検索すると構造が確認可
+                R.layout.custom_simple_list_item_2,    // 行レイアウトのリソース、androidのものを使用。shift二回押して検索すると構造が確認可
                 null,                                   // Cursorを指定、あとでCursorLoaderが後で作ってくれるので一旦null
                 from,                                   // どのカラムを・・・
                 to,                                     // 行レイアウトリソースのどのIDに表示するか
@@ -107,7 +113,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // CursorLoaderのためのLoader初期化 → AdapterにonCreateLoaderが返却したCursorが設定される
         getLoaderManager().initLoader(0, null, this);
 
-
+        // デフォルト色を取得し保持
+        TypedValue typedValue = new TypedValue();
+        getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true);
+        int resourceId = typedValue.resourceId;
+        defaultBackgroundColor = ContextCompat.getColor(MainActivity.this, resourceId);
 
 
 
@@ -143,16 +153,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                     // インデックスセットからランダムに1つ取り出しスクロール
                     // スクロール前に、スクロール前後の一番上のインデックスを取得しておく
                     final int randomIndex = getIndexRandom();
+                    selectedRandomIndex = new Integer(randomIndex);
                     final int beforeFirstVisiblePosition = mainListView.getFirstVisiblePosition();
 
-
+                    // TODO: スクロール前にも表示中の背景色を初期化する。スクロール後と処理が被るので切り出す
 
                     //リストアイテムの総数-1（0番目から始まって最後のアイテム）にスクロールさせる
                     mainListView.smoothScrollToPosition(randomIndex);
 //                    mainListView.setSelection(randomIndex);
 
-                    // スムーススクロール後に一番上に表示しているViewを取るために待機 イケてない・・・？
+                    // スムーススクロール後に一番上に表示しているViewを取るために待機
                     //  http://qiita.com/Kaiketch/items/51156f2a38ba181440dc
+                    // TODO:イケてなさそうなので別解を考える
+                    //  http://jp.androids.help/q15937
                     mainListView.postDelayed(new Runnable() {
                         @Override
                         public void run() {
@@ -171,6 +184,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                                 randomSelectedView.setBackgroundColor(ContextCompat.getColor(MainActivity.this, android.R.color.holo_red_light));
                             }
                             // ランダム選択以外の背景色をデフォルトに戻す（画面表示中のもののみ）
+                            // 画面表示外は再表示時のadapter.getViewをオーバーライドし実施
                             for (int i = 0;
                                  i <= mainListView.getFirstVisiblePosition() + mainListView.getChildCount();
                                  i++)
@@ -179,14 +193,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                                 View v = mainListView.getChildAt(i);
                                 if (v != null && v != randomSelectedView) {
 
-                                    // デフォルト色を取得
-                                    TypedValue typedValue = new TypedValue();
-                                    getTheme().resolveAttribute(android.R.attr.colorBackground, typedValue, true);
-                                    int resourceId = typedValue.resourceId;
-                                    int colorBackground = ContextCompat.getColor(MainActivity.this, resourceId);
 
                                     Log.d(CLASS_NAME + "." + METHOD_NAME, "■色初期化Viewタイトル：" + ((TwoLineListItem)v).getText1().getText());
-                                    v.setBackgroundColor(colorBackground);
+                                    v.setBackgroundColor(defaultBackgroundColor);
                                 }
                             }
 
