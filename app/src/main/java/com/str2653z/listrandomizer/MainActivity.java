@@ -31,6 +31,10 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     private SimpleCursorAdapter adapter;
     public static final String EXTRA_MYID = "com.str2653z.listrandomizer.MYID";
+    public static final String EXTRA_AGENDA = "com.str2653z.listrandomizer.AGENDA";
+
+    /** 改行 */
+    static final String BR = System.getProperty("line.separator");
 
     // FloatingActionButtonのonClickイベントで参照したかったのでフィールドを作成
     // staticである必要はないのかも・・・
@@ -240,9 +244,52 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     @Override // Menuのメソッド実装、メニューのオプション項目の選択イベントを判断し適切な処理を実行
     public boolean onOptionsItemSelected(MenuItem item) {
+        final String METHOD_NAME = "onOptionsItemSelected";
+        Log.d(METHOD_NAME, "entering");
+
         int id = item.getItemId();
         if (id == R.id.action_add) {
+            Log.d(CLASS_NAME + "." + METHOD_NAME, "■id：R.id.action_add");
+
             Intent intent = new Intent(this, SubActivity.class);
+            startActivity(intent);
+            return true;
+        } else if (id == R.id.action_agenda) {
+            // TODO: 2015/11/27 アイコンがイケてないかも・・・ 
+            Log.d(CLASS_NAME + "." + METHOD_NAME, "■id：R.id.action_agenda");
+
+            // 初回query発行と同様の内容を取得
+            // TODO: 2015/11/26 MainActivityのAdapterから内容を取得できないのか・・・？ [NGパターン]Cursor c = this.adapter.getCursor();　Failed to read row 0, column -1 from a CursorWindow which has 12 rows, 3 columns.　java.lang.IllegalStateException: Couldn't read row 0, col -1 from CursorWindow.  Make sure the Cursor is initialized correctly before accessing data from it.
+            String[] projection = {
+                    ItemContract.Items._ID,
+                    ItemContract.Items.COL_TITLE,
+                    ItemContract.Items.COL_BODY
+            };
+            Cursor c = getContentResolver().query(
+                    ItemContentProvider.CONTENT_URI,
+                    projection,
+                    null,
+                    null,
+                    ItemContract.Items.COL_UPDATED + " DESC"
+            );
+
+            // アジェンダテキスト作成
+            StringBuilder agendaSb = new StringBuilder();
+            boolean next = c.moveToFirst();
+            while (next) {
+                agendaSb.append("■")
+                        .append(c.getString(c.getColumnIndex(ItemContract.Items.COL_TITLE)))
+                        .append(BR)
+                        .append(c.getString(c.getColumnIndex(ItemContract.Items.COL_BODY)))
+                        .append(BR + BR);
+
+                // 次のレコード
+                next = c.moveToNext();
+            }
+            Log.d(CLASS_NAME + "." + METHOD_NAME, "■agenda：" + agendaSb.toString());
+
+            Intent intent = new Intent(this, AgendaActivity.class);
+            intent.putExtra(EXTRA_AGENDA, agendaSb.toString());
             startActivity(intent);
             return true;
         }

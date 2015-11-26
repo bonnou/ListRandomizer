@@ -83,8 +83,6 @@ public class SubActivity extends AppCompatActivity implements DialogListener {
                     // 内容に変更がなければダイアログなしでActivityを終了
                     finish();
                 }
-
-
             }
         });
 

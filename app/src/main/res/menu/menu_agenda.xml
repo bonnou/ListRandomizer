@@ -1,0 +1,19 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" tools:context=".AgendaActivity">
+
+<!--
+    <item
+        android:id="@+id/action_settings"
+        android:title="@string/action_settings"
+        android:orderInCategory="100"
+        app:showAsAction="never" />
+-->
+    <item
+        android:id="@+id/action_saveText"
+        android:title="@string/action_saveText"
+        android:orderInCategory="100"
+        app:showAsAction="withText" />
+    <!--        android:icon="@android:drawable/ic_menu_save" -->
+
+</menu>

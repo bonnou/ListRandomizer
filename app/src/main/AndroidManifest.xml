@@ -31,6 +31,11 @@
             android:label="@string/title_activity_sub"
             android:theme="@style/AppTheme.NoActionBar" >
         </activity>
+        <activity
+            android:name=".AgendaActivity"
+            android:label="@string/title_activity_agenda"
+            android:theme="@style/AppTheme.NoActionBar" >
+        </activity>
     </application>
 
 </manifest>
