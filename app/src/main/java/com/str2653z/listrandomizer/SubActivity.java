@@ -1,6 +1,8 @@
 package com.str2653z.listrandomizer;
 
 import android.app.AlertDialog;
+import android.app.Dialog;
+import android.app.DialogFragment;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.DialogInterface;
@@ -12,6 +14,8 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -19,11 +23,18 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.str2653z.listrandomizer.common.DialogListener;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.EventListener;
 import java.util.Locale;
 
-public class SubActivity extends AppCompatActivity {
+public class SubActivity extends AppCompatActivity implements DialogListener {
+
+    public static final String CLASS_NAME = "SubActivity";
+
+    private static final String sTAG_SUBACTIVITY_SAVEDIALOG = "SubActivity_SaveDialog";
 
     private long itemId;
 
@@ -31,14 +42,51 @@ public class SubActivity extends AppCompatActivity {
     private EditText bodyText;
     private TextView updatedText;
 
+    /** 保存確認ダイアログ表示判定用に、アクティビティ表示時点の内容を保持しておく */
+    private String beforeTitle = "";
+    private String beforeBody = "";
+
+    /** trueの場合は保存確認ダイアログを無条件で非表示にする */
+    public static boolean dontOpenSaveDialog = false;
+
+    private void clearField() {
+        beforeTitle = "";
+        beforeBody = "";
+        dontOpenSaveDialog = false;
+    }
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        final String METHOD_NAME = "onCreate";
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_sub);
 
-        // メニューを設定
+        // フィールド初期化
+        clearField();
+
+        // ツールバーを設定
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // ツールバーに戻るボタンを追加
+        toolbar.setNavigationIcon(android.R.drawable.ic_menu_revert);
+        toolbar.setNavigationOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 入力変更がある場合
+                if ( !dontChangeData() ) {
+                    // ダイアログを表示する
+                    openSaveDialog();
+                } else {
+                    // 内容に変更がなければダイアログなしでActivityを終了
+                    finish();
+                }
+
+
+            }
+        });
 
         // layoutの要素を取得
         titleText = (EditText) findViewById(R.id.titleText);
@@ -85,9 +133,13 @@ public class SubActivity extends AppCompatActivity {
             titleText.setText(
                     c.getString(c.getColumnIndex(ItemContract.Items.COL_TITLE))
             );
+            beforeTitle = c.getString(c.getColumnIndex(ItemContract.Items.COL_TITLE));
+
             bodyText.setText(
                     c.getString(c.getColumnIndex(ItemContract.Items.COL_BODY))
             );
+            beforeBody = c.getString(c.getColumnIndex(ItemContract.Items.COL_BODY));
+
             updatedText.setText(
                     "Updated: " + c.getString(c.getColumnIndex(ItemContract.Items.COL_UPDATED))
             );
@@ -104,6 +156,41 @@ public class SubActivity extends AppCompatActivity {
             }
         });
 */
+    }
+
+    /**
+     * 保存確認ダイアログを表示
+     * ※現状以下で呼び出している
+     * ・ツールバーの戻るボタンを押下した場合
+     * ・onKeyDownにてBACKボタン押下を検知した場合
+     */
+    private void openSaveDialog() {
+        SaveDialogFragment saveDialogFragment = new SaveDialogFragment();
+        saveDialogFragment.setDialogListener(SubActivity.this);
+        saveDialogFragment.show(getFragmentManager(), sTAG_SUBACTIVITY_SAVEDIALOG);
+        Log.d(CLASS_NAME, "■Saveダイアログ表示");
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        final String METHOD_NAME = "onKeyDown";
+        Log.d(METHOD_NAME, "enterring");
+
+        // BACKボタンの場合
+        if(keyCode == KeyEvent.KEYCODE_BACK){
+            // 入力変更がある場合
+            if ( !dontChangeData() ) {
+                // ダイアログを表示する
+                openSaveDialog();
+                return false;
+            } else {
+                // 内容に変更がなければダイアログなしでActivityを終了
+                return super.onKeyDown(keyCode, event);
+            }
+        } else {
+            // BACKボタンでなければ何もしない
+            return super.onKeyDown(keyCode, event);
+        }
     }
 
     @Override // OptionsMenuが用意される時に呼ばれるメソッド
@@ -165,6 +252,9 @@ public class SubActivity extends AppCompatActivity {
     }
 
     private void saveItem() {
+        final String METHOD_NAME = "dontChangeData";
+        Log.d(METHOD_NAME, "■saveItem enterring");
+
         // 現在の入力内容を取得
         String title = titleText.getText().toString().trim();
         String body = bodyText.getText().toString().trim();
@@ -189,6 +279,8 @@ public class SubActivity extends AppCompatActivity {
                         ItemContentProvider.CONTENT_URI,        // CONTENT_URI
                         values                                  // ContentValuesオブジェクト
                 );
+                // 保存確認ダイアログ無しでActivityを閉じる
+                dontOpenSaveDialog = true;
                 finish();
             } else {
                 // update memo
@@ -202,9 +294,124 @@ public class SubActivity extends AppCompatActivity {
                         ItemContract.Items._ID + " = ?",        // WHERE句
                         new String[] { Long.toString(itemId) }  // バインド内容をString配列で指定
                 );
-                // Activityを閉じる
+                // 保存確認ダイアログ無しでActivityを閉じる
+                dontOpenSaveDialog = true;
                 finish();
             }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        final String METHOD_NAME = "onDestroy";
+        Log.d(CLASS_NAME + "." + METHOD_NAME, "■onDestroy起動");
+
+        // フィールド初期化
+        clearField();
+        super.onDestroy();
+    }
+
+    /**
+     * 画面入力値変更判定
+     *
+     * @return Activity表示時から画面入力値を変更していない場合true
+     */
+    private boolean dontChangeData() {
+        final String METHOD_NAME = "dontChangeData";
+
+        boolean result = false;
+
+        // 現在の入力内容を取得
+        String title = titleText.getText().toString();
+        String body = bodyText.getText().toString();
+
+        Log.d(METHOD_NAME, "■title：[" + title + "]");
+        Log.d(METHOD_NAME, "■beforeTitle：[" + beforeTitle + "]");
+        Log.d(METHOD_NAME, "■body：" + body + "]");
+        Log.d(METHOD_NAME, "■beforeBody：" + beforeBody + "]");
+
+        if (
+                title.equals(beforeTitle)
+             && body.equals(beforeBody)
+        ) {
+            result = true;
+        }
+
+        // TODO:TAGは23文字までしか設定できない→クラス名とメソッド名にはできない
+        Log.d(METHOD_NAME, "■result：" + result);
+        return result;
+    }
+
+    @Override
+    public void doPositiveClick() {
+        Log.d(CLASS_NAME, "■doPositiveClick ");
+        saveItem();
+    }
+
+    @Override
+    public void doNegativeClick() {
+        Log.d(CLASS_NAME, "■doNegativeClick");
+    }
+
+    public static class SaveDialogFragment extends DialogFragment {
+        private DialogListener listener = null;
+
+        private boolean finishActivityFlg = false;
+
+        @Override
+        public Dialog onCreateDialog(Bundle savedInstanceState) {
+            // Use the Builder class for convenient dialog construction
+            AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+            builder.setMessage("内容が変更されています。保存しますか？")
+                    .setPositiveButton("保存して終了", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            finishActivityFlg = true;
+                            listener.doPositiveClick();
+                            dismiss();
+                        }
+                    })
+                    .setNegativeButton("保存せず終了", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            finishActivityFlg = true;
+                            listener.doNegativeClick();
+                            dismiss();
+
+                        }
+                    })
+                    .setNeutralButton("再編集", new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int id) {
+                            finishActivityFlg = false;
+                            Log.d(CLASS_NAME, "■NeutralButton：do nothing ");
+                        }
+                    });
+            // Create the AlertDialog object and return it
+            return builder.create();
+        }
+
+        @Override
+        public void onStop() {
+            final String METHOD_NAME = "dontChangeData";
+            Log.d(METHOD_NAME, "■onStop entering");
+
+            super.onStop();
+            if (finishActivityFlg) {
+                getActivity().finish();
+            }
+            finishActivityFlg = false;
+        }
+
+        /**
+         * リスナーを追加
+         */
+        public void setDialogListener(DialogListener listener){
+            this.listener = listener;
+        }
+
+        /**
+         * リスナー削除
+         */
+        public void removeDialogListener(){
+            this.listener = null;
         }
     }
 

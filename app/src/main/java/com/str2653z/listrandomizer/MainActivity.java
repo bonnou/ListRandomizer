@@ -21,9 +21,6 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
-
-import com.str2653z.listrandomizer.custom.adapter.CustomSimpleCursorAdapter;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -32,7 +29,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     public static final String CLASS_NAME = "MainActivity";
 
-    private CustomSimpleCursorAdapter adapter;
+    private SimpleCursorAdapter adapter;
     public static final String EXTRA_MYID = "com.str2653z.listrandomizer.MYID";
 
     // FloatingActionButtonのonClickイベントで参照したかったのでフィールドを作成
@@ -81,9 +78,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 android.R.id.text2
         };
         //
-        adapter = new CustomSimpleCursorAdapter(
+        adapter = new SimpleCursorAdapter(
                 this,                                   // 本Activityオブジェクト
-                R.layout.custom_simple_list_item_2,    // 行レイアウトのリソース、androidのものを使用。shift二回押して検索すると構造が確認可
+                android.R.layout.simple_list_item_2,    // 行レイアウトのリソース、androidのものを使用。shift二回押して検索すると構造が確認可
                 null,                                   // Cursorを指定、あとでCursorLoaderが後で作ってくれるので一旦null
                 from,                                   // どのカラムを・・・
                 to,                                     // 行レイアウトリソースのどのIDに表示するか
@@ -121,7 +118,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
 
 
-
+        // ツールバーを設定
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
