@@ -15,5 +15,6 @@ public final class ItemContract {
         public static final String COL_BODY = "body";
         public static final String COL_CREATED = "created";
         public static final String COL_UPDATED = "updated";
+        public static final String COL_ORDERNUM = "orderNum";
     }
 }

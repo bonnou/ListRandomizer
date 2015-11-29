@@ -9,6 +9,9 @@
         app:showAsAction="always|withText">
         <menu>
             <item
+                android:id="@+id/menuSortOrderNum"
+                android:title="固定順序" />
+            <item
                 android:id="@+id/menuSortNewest"
                 android:title="更新した順" />
             <item

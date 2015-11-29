@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.util.TypedValue;
+import android.view.ContextMenu;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -21,6 +22,9 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.Toast;
 import android.widget.TwoLineListItem;
+
+import com.str2653z.listrandomizer.custom.view.CustomTwoLineListItem;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -45,8 +49,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     public Integer selectedRandomIndex;
 
 
-
-    public static String loaderOrderBy = ItemContract.Items.COL_UPDATED + " DESC";
+    // TODO: ソート順序はアプリで記憶したいがひとまずカラムの表示順序の昇順
+    public static String loaderOrderBy = ItemContract.Items.COL_ORDERNUM + " ASC";
 
 
 
@@ -80,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
         // Adapter設定
         String[] from = {
-                ItemContract.Items.COL_TITLE,
+                ItemContract.Items.COL_TITLE,// TODO:デバッグ用：COL_ORDERNUM
                 ItemContract.Items.COL_UPDATED
         };
         int[] to = {
@@ -100,7 +104,8 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         // layoutのxmlにて定義したListViewを取得しAdapterを設定
         mainListView = (ListView) findViewById(R.id.mainListView);
         mainListView.setAdapter(adapter);
-        //
+
+        // ビュー単推し時
         mainListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(
@@ -116,6 +121,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 startActivity(intent);
             }
         });
+
+        // ビュー長推し時、コンテキストメニューを登録（onCreateContextMenu、onContextItemSelected参照）
+        // ※trueを返すだけのonItemLongClickを書きかけ実装してmainListView.setOnItemLongClickListenerしてたから一生コンテキストメニューがでないどころだった
+        // TODO: なんでregisterForContextMenuメソッドの背景色が黄色くなる？？？動いてるからいいけど・・・
+        registerForContextMenu(mainListView);
+
 
         // CursorLoaderのためのLoader初期化 → AdapterにonCreateLoaderが返却したCursorが設定される
         getLoaderManager().initLoader(0, null, this);
@@ -241,6 +252,64 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     }
 
+    /*
+     * ContextMenu生成時に呼び出されるメソッド.
+     * 今回の設定ではListViewのindex=0,1はContextMenuが表示されないよう制御.
+     */
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo) {
+        super.onCreateContextMenu(menu, view, menuInfo);
+
+        // ListViewにキャストする。
+        ListView listView = (ListView) view;
+        // AdapterContextMenuInfoにキャストする。
+        AdapterView.AdapterContextMenuInfo contextMenuInfo= (AdapterView.AdapterContextMenuInfo) menuInfo;
+
+        boolean sortByOrderNumFlg = false;
+        if ( loaderOrderBy.equals(ItemContract.Items.COL_ORDERNUM + " ASC") ) {
+            sortByOrderNumFlg = true;
+        }
+
+        menu.setHeaderTitle("ContextMenu");
+        menu.add("削除（未実装）");
+        // 表示位置移動は固定順序表示時のみ可能
+        if (sortByOrderNumFlg) {
+            // 一番上のViewは表示位置を上に移動できない
+            if (contextMenuInfo.position != 0) {
+                menu.add("表示位置を1つ上へ（未実装）");
+            }
+            // 一番下のViewは表示位置を下に移動できない
+            if (contextMenuInfo.position != mainListView.getCount() - 1) {
+                menu.add("表示位置を1つ下へ（未実装）");
+            }
+        }
+    }
+
+    /*
+     * メニューがクリックされた際に呼び出されるメソッド.
+     */
+    @Override
+    public boolean onContextItemSelected(MenuItem item) {
+
+        // menu名を取得
+        String menuName = item.getTitle().toString();
+        // ContextMenuInfoを取得
+        AdapterView.AdapterContextMenuInfo detailInfo = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+
+        // TODO:実装
+        if ("削除".equals(menuName)) {
+            Log.d("onContextItemSelected", detailInfo .position + "の" + menuName + "処理を実行");
+
+        } else if ("表示位置を1つ上へ".equals(menuName)) {
+            Log.d("onContextItemSelected", detailInfo .position + "の" + menuName + "処理を実行");
+
+        } else if ("表示位置を1つ下へ".equals(menuName)) {
+            Log.d("onContextItemSelected", detailInfo .position + "の" + menuName + "処理を実行");
+
+        }
+        return true;
+    }
+
     @Override // Menuのメソッド実装、res/menuフォルダ内のどのxmlを使用するかを指定
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -298,8 +367,13 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             intent.putExtra(EXTRA_AGENDA, agendaSb.toString());
             startActivity(intent);
             return true;
-        } else if ( id == R.id.menuSortNewest ) {
+        } else if ( id == R.id.menuSortOrderNum ) {
             // TODO:Loader再作成でクエリ発行がされるがレコード数が多い場合に問題ないか
+            // loader用のORDER BY句を変更しonCreateLoaderを呼ぶ
+            loaderOrderBy = ItemContract.Items.COL_ORDERNUM + " ASC";
+            getLoaderManager().restartLoader(0, null, this);
+
+        } else if ( id == R.id.menuSortNewest ) {
             // loader用のORDER BY句を変更しonCreateLoaderを呼ぶ
             loaderOrderBy = ItemContract.Items.COL_UPDATED + " DESC";
             getLoaderManager().restartLoader(0, null, this);
@@ -322,7 +396,9 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         String[] projection = {
                 ItemContract.Items._ID,
                 ItemContract.Items.COL_TITLE,
-                ItemContract.Items.COL_UPDATED
+                ItemContract.Items.COL_UPDATED,
+                ItemContract.Items.COL_ORDERNUM
+
         };
 
         // 初回query発行
