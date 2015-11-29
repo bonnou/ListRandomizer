@@ -1,14 +1,15 @@
 <resources>
     <string name="app_name">ListRandomizer</string>
 
-    <string name="action_agenda">AGENDA</string>
-    <string name="action_saveText">SAVE TXT</string>
-    <string name="action_add">ADD</string>
-    <string name="action_save">SAVE</string>
-    <string name="action_delete">DELETE</string>
-    <string name="hint_title">Title</string>
-    <string name="hint_body">Body</string>
-    <string name="hint_agenda">Agenda</string>
-    <string name="title_activity_sub">SubActivity</string>
-    <string name="title_activity_agenda">AgendaActivity</string>
+    <string name="action_sort">sortBy</string>
+    <string name="action_agenda">agenda</string>
+    <string name="action_saveText">sageTxt</string>
+    <string name="action_add">add</string>
+    <string name="action_save">save</string>
+    <string name="action_delete">delete</string>
+    <string name="hint_title">title</string>
+    <string name="hint_body">body</string>
+    <string name="hint_agenda">agenda</string>
+    <string name="title_activity_sub">SubAct</string>
+    <string name="title_activity_agenda">AgendaAct</string>
 </resources>

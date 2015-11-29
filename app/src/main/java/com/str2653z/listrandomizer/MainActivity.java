@@ -44,6 +44,12 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
 
     public Integer selectedRandomIndex;
 
+
+
+    public static String loaderOrderBy = ItemContract.Items.COL_UPDATED + " DESC";
+
+
+
     // ListViewのインデックスリスト
     List<Integer> indexList = new ArrayList<Integer>();
 
@@ -255,7 +261,7 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             startActivity(intent);
             return true;
         } else if (id == R.id.action_agenda) {
-            // TODO: 2015/11/27 アイコンがイケてないかも・・・ 
+            // TODO: 2015/11/27 アイコンがイケてないかも・・・
             Log.d(CLASS_NAME + "." + METHOD_NAME, "■id：R.id.action_agenda");
 
             // 初回query発行と同様の内容を取得
@@ -292,12 +298,26 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             intent.putExtra(EXTRA_AGENDA, agendaSb.toString());
             startActivity(intent);
             return true;
+        } else if ( id == R.id.menuSortNewest ) {
+            // TODO:Loader再作成でクエリ発行がされるがレコード数が多い場合に問題ないか
+            // loader用のORDER BY句を変更しonCreateLoaderを呼ぶ
+            loaderOrderBy = ItemContract.Items.COL_UPDATED + " DESC";
+            getLoaderManager().restartLoader(0, null, this);
+
+        } else if ( id == R.id.menuSortOldest ) {
+            // loader用のORDER BY句を変更しonCreateLoaderを呼ぶ
+            loaderOrderBy = ItemContract.Items.COL_UPDATED + " ASC";
+            getLoaderManager().restartLoader(0, null, this);
         }
+
         return super.onOptionsItemSelected(item);
     }
 
     @Override // LoaderManagerのメソッド実装、初回のクエリ実行内容を設定する
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
+        final String METHOD_NAME = "onCreateLoader";
+        Log.d(METHOD_NAME, "entering");
+
         // SELECT句
         String[] projection = {
                 ItemContract.Items._ID,
@@ -312,18 +332,22 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
                 projection,
                 null,
                 null,
-                ItemContract.Items.COL_UPDATED + " DESC"
+                loaderOrderBy
         );
     }
 
     @Override // LoaderManagerのメソッド実装、ContentProviderからデータが帰ってきた時に実行される
     public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
+        final String METHOD_NAME = "onLoadFinished";
+        Log.d(METHOD_NAME, "entering");
         // 帰ってきたデータでAdapterを更新
         adapter.swapCursor(data);
     }
 
     @Override // LoaderManagerのメソッド実装、何らかの理由でLoaderがリセットされた時に実行される
     public void onLoaderReset(Loader<Cursor> loader) {
+        final String METHOD_NAME = "onLoaderReset";
+        Log.d(METHOD_NAME, "entering");
         // ひとまずnull
         adapter.swapCursor(null);
     }

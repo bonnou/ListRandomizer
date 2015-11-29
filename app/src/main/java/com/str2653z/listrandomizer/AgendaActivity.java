@@ -6,6 +6,7 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.method.ScrollingMovementMethod;
 import android.view.View;
 import android.widget.TextView;
 
@@ -32,7 +33,7 @@ public class AgendaActivity extends AppCompatActivity {
         });
 
         // ツールバーのタイトルを設定
-        toolbar.setTitle("Agenda"); // TODO: 2015/11/26 効いていない・・・？ 
+        toolbar.setTitle("Agenda"); // TODO: 2015/11/26 効いていない・・・？
 
         // MainActivityにて作成したアジェンダテキストを取得
         Intent intent = getIntent();
@@ -41,6 +42,7 @@ public class AgendaActivity extends AppCompatActivity {
         // layoutの要素を取得
         agendaText = (TextView) findViewById(R.id.agendaText);  // xmlにて編集不可に設定している
         agendaText.setText(agendaStr);
+        agendaText.setMovementMethod(ScrollingMovementMethod.getInstance());
 
 /*
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);

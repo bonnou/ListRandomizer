@@ -113,7 +113,7 @@ public class SubActivity extends AppCompatActivity implements DialogListener {
                     ItemContentProvider.CONTENT_URI,
                     itemId
             );
-            // ContetProviderによりクエリ発行しCursorを取得
+            // ContentProviderによりクエリ発行しCursorを取得
             String[] projection = {
                     ItemContract.Items.COL_TITLE,
                     ItemContract.Items.COL_BODY,
